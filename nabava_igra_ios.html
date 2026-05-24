@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>Nabava zaliha – 45-minutna obrazovna igra</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1d4ed8;--blue-l:#eff6ff;--blue-m:#bfdbfe;--blue-d:#1e3a8a;
+  --green:#047857;--green-l:#ecfdf5;--green-m:#a7f3d0;
+  --red:#b91c1c;--red-l:#fef2f2;--red-m:#fecaca;
+  --amber:#b45309;--amber-l:#fffbeb;--amber-m:#fde68a;
+  --slate:#334155;--slate-l:#f8fafc;--slate-m:#e2e8f0;--slate-d:#0f172a;
+  --purple:#6d28d9;--purple-l:#f5f3ff;--purple-m:#ddd6fe;
+  --r:10px;--r-lg:14px;--sh:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:var(--slate-d);min-height:100vh;-webkit-text-size-adjust:100%}
+#wrap{max-width:820px;margin:0 auto;padding:16px;padding-bottom:40px}
+
+/* TOP BAR */
+#topbar{background:#fff;border:1px solid var(--slate-m);border-radius:var(--r-lg);padding:12px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--sh);display:none}
+.tb-phases{display:flex;gap:4px;align-items:center}
+.ph-pip{width:28px;height:6px;border-radius:3px;background:var(--slate-m);transition:background .3s}
+.ph-pip.done{background:var(--green)}
+.ph-pip.active{background:var(--blue)}
+.tb-right{display:flex;gap:10px;align-items:center}
+.timer{font-size:16px;font-weight:700;color:var(--blue);background:var(--blue-l);padding:4px 12px;border-radius:8px;font-variant-numeric:tabular-nums}
+.timer.warn{color:var(--red);background:var(--red-l)}
+.phase-tag{font-size:12px;font-weight:600;color:var(--slate);background:var(--slate-l);border:1px solid var(--slate-m);padding:3px 10px;border-radius:20px}
+
+/* PROGRESS */
+#progbar-wrap{margin-bottom:14px;display:none}
+.pb-meta{display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-bottom:5px}
+.pb{height:7px;background:var(--slate-m);border-radius:4px;overflow:hidden}
+.pb-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:4px;transition:width .5s}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--slate-m);border-radius:var(--r-lg);padding:1.5rem;margin-bottom:14px;box-shadow:var(--sh)}
+.card-blue{border-left:4px solid var(--blue)}
+.card-green{border-left:4px solid var(--green)}
+.card-amber{border-left:4px solid var(--amber)}
+.card-purple{border-left:4px solid var(--purple)}
+.card-red{border-left:4px solid var(--red)}
+
+/* TYPOGRAPHY */
+h1{font-family:'Merriweather',serif;font-size:24px;font-weight:700;color:var(--slate-d);margin-bottom:.4rem}
+h2{font-family:'Inter',sans-serif;font-size:19px;font-weight:700;color:var(--slate-d);margin-bottom:.4rem}
+h3{font-size:16px;font-weight:600;color:var(--slate-d);margin-bottom:.5rem}
+p{font-size:14px;color:#475569;line-height:1.65}
+
+/* BADGES */
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:.3px}
+.b-blue{background:var(--blue-l);color:var(--blue-d);border:1px solid var(--blue-m)}
+.b-green{background:var(--green-l);color:var(--green);border:1px solid var(--green-m)}
+.b-red{background:var(--red-l);color:var(--red);border:1px solid var(--red-m)}
+.b-amber{background:var(--amber-l);color:var(--amber);border:1px solid var(--amber-m)}
+.b-purple{background:var(--purple-l);color:var(--purple);border:1px solid var(--purple-m)}
+.b-slate{background:var(--slate-l);color:var(--slate);border:1px solid var(--slate-m)}
+
+/* BUTTONS */
+.btn{font-family:'Inter',sans-serif;font-weight:600;border:none;border-radius:var(--r);padding:9px 20px;font-size:14px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#065f46}
+.btn-outline{background:#fff;color:var(--slate);border:1.5px solid var(--slate-m)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+.btn-lg{padding:12px 28px;font-size:16px;border-radius:var(--r-lg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* QUIZ OPTS */
+.opts{display:flex;flex-direction:column;gap:8px;margin:1rem 0}
+.opt{width:100%;text-align:left;background:#fff;border:1.5px solid var(--slate-m);border-radius:var(--r);padding:11px 16px;font-size:14px;font-family:'Inter',sans-serif;color:var(--slate-d);cursor:pointer;transition:all .12s}
+.opt:hover:not(:disabled){border-color:var(--blue);background:var(--blue-l)}
+.opt.correct{background:var(--green-l);border-color:var(--green);color:var(--green)}
+.opt.wrong{background:var(--red-l);border-color:var(--red);color:var(--red)}
+.opt:disabled{cursor:default}
+
+/* TEXTAREA */
+textarea,input[type=text],input[type=number],input[type=date],select{
+  width:100%;border:1.5px solid var(--slate-m);border-radius:var(--r);padding:9px 13px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--slate-d);outline:none;
+  transition:border .15s;resize:vertical;background:#fff}
+textarea:focus,input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+.char-count{font-size:12px;text-align:right;margin-top:4px;transition:color .2s}
+.char-ok{color:var(--green)}
+.char-warn{color:var(--red)}
+
+/* FEEDBACK BOXES */
+.fb{padding:12px 16px;border-left:4px solid;border-radius:0 var(--r) var(--r) 0;margin:10px 0;font-size:14px;line-height:1.6}
+.fb-ok{border-color:var(--green);background:var(--green-l);color:#064e3b}
+.fb-no{border-color:var(--red);background:var(--red-l);color:#7f1d1d}
+.fb-info{border-color:var(--blue);background:var(--blue-l);color:var(--blue-d)}
+.fb-tip{border-color:var(--amber);background:var(--amber-l);color:#78350f}
+
+/* STAT GRID */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--slate-m);border-radius:var(--r);padding:12px;text-align:center}
+.stat-l{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.stat-v{font-size:21px;font-weight:700;color:var(--slate-d)}
+
+/* PHASE HEADER */
+.ph-hdr{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--slate-m)}
+.ph-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;flex-shrink:0}
+.ph-info-title{font-size:17px;font-weight:700;color:var(--slate-d)}
+.ph-info-sub{font-size:13px;color:#64748b;margin-top:2px}
+
+/* NARUDŽBENICA */
+.narudz-header{background:var(--slate-d);color:#fff;padding:14px 20px;border-radius:var(--r) var(--r) 0 0;display:flex;justify-content:space-between;align-items:center}
+.narudz-body{border:1px solid var(--slate-m);border-top:none;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.narudz-section{padding:16px 20px;border-bottom:1px solid var(--slate-m)}
+.narudz-section:last-child{border-bottom:none}
+.narudz-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.narudz-field label{font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.narudz-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.narudz-table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+.narudz-table th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;border-bottom:1px solid var(--slate-m)}
+.narudz-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9}
+.narudz-table input{border:none;border-bottom:1px solid var(--slate-m);border-radius:0;padding:4px 6px;font-size:13px}
+.narudz-table input:focus{border-bottom-color:var(--blue);box-shadow:none}
+.total-row{background:#f8fafc;font-weight:700}
+
+/* SCENARIO */
+.sc-story{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1px solid var(--blue-m);border-radius:var(--r);padding:16px;margin:1rem 0;font-size:14px;line-height:1.7}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1rem 0}
+.choice{background:#fff;border:1.5px solid var(--slate-m);border-radius:var(--r);padding:13px;cursor:pointer;transition:all .15s}
+.choice:hover{border-color:var(--blue);background:var(--blue-l)}
+.choice.sel{border-color:var(--blue);background:var(--blue-l)}
+.choice.correct{border-color:var(--green);background:var(--green-l)}
+.choice.wrong{border-color:var(--red);background:var(--red-l)}
+.choice-lbl{font-weight:700;font-size:13px;margin-bottom:4px}
+.choice-desc{font-size:12px;color:#64748b}
+
+/* SIM */
+.sup-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sup-card{background:#fff;border:1.5px solid var(--slate-m);border-radius:var(--r);padding:13px;cursor:pointer;transition:all .15s}
+.sup-card:hover{border-color:var(--blue)}
+.sup-card.chosen{border-color:var(--blue);background:var(--blue-l)}
+.sup-row{display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin:3px 0}
+
+/* ESEJ */
+.esej-prompts{background:var(--amber-l);border:1px solid var(--amber-m);border-radius:var(--r);padding:14px;margin:1rem 0}
+.esej-prompts ul{margin-left:1.2rem;margin-top:.5rem}
+.esej-prompts li{font-size:13px;color:#78350f;line-height:1.7}
+.word-count{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-block;margin-top:6px}
+.wc-low{background:var(--red-l);color:var(--red)}
+.wc-ok{background:var(--green-l);color:var(--green)}
+
+/* INTRO */
+.intro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:1.5rem 0}
+.intro-phase{background:#fff;border:1px solid var(--slate-m);border-radius:var(--r);padding:14px;text-align:center}
+.intro-phase-icon{font-size:28px;margin-bottom:6px}
+.intro-phase-num{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:4px}
+.intro-phase-title{font-size:13px;font-weight:700;color:var(--slate-d);margin-bottom:3px}
+.intro-phase-time{font-size:11px;color:#64748b}
+.input-field{margin-bottom:12px}
+.input-field label{font-size:13px;font-weight:600;color:var(--slate);display:block;margin-bottom:5px}
+
+/* END */
+.result-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.result-table td{padding:10px 12px;border-bottom:1px solid var(--slate-m);font-size:14px}
+.result-table td:first-child{color:#64748b}
+.result-table td:last-child{font-weight:600;text-align:right}
+.grade-display{font-size:52px;font-weight:700;text-align:center;margin:.5rem 0}
+
+.screen{display:none}
+.screen.active{display:block}
+
+@media(max-width:600px){
+  #wrap{padding:8px}
+  .card{padding:1rem}
+  h1{font-size:19px}
+  h2{font-size:17px}
+  h3{font-size:15px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:7px}
+  .stat-v{font-size:17px}
+  .choice-grid,.sup-grid,.narudz-grid,.intro-grid{grid-template-columns:1fr}
+  .btn-lg{padding:13px 20px;font-size:15px;width:100%}
+  .btn{font-size:13px;padding:10px 14px}
+  #topbar{padding:8px 12px;flex-wrap:wrap;gap:6px}
+  .ph-pip{width:22px;height:5px}
+  .timer{font-size:14px;padding:3px 9px}
+  textarea{font-size:16px!important} /* prevents iOS zoom on focus */
+  input[type=text],input[type=number],input[type=date],select{font-size:16px!important}
+  .narudz-table{font-size:11px}
+  .narudz-table th{font-size:10px;padding:6px 5px}
+  .narudz-table td{padding:4px 4px}
+  .narudz-table input{font-size:13px!important;padding:3px 4px}
+  .narudz-header{padding:10px 12px}
+  .narudz-section{padding:12px}
+  .sc-story{font-size:13px;padding:12px}
+  .opt{font-size:13px;padding:12px 13px}
+  .choice{padding:10px}
+  .sup-card{padding:10px}
+  .intro-grid{grid-template-columns:repeat(2,1fr)}
+  .intro-phase{padding:10px}
+  .intro-phase-icon{font-size:22px}
+  .grade-display{font-size:40px}
+  .result-table td{font-size:13px;padding:8px 10px}
+  .ph-hdr{gap:8px;margin-bottom:1rem}
+  .ph-num{width:32px;height:32px;font-size:14px}
+  .esej-prompts li{font-size:12px}
+  .sim-qty-wrap{flex-direction:column}
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for iOS rubber-band scrolling */
+  body { -webkit-overflow-scrolling: touch; }
+  
+  /* Fix input zoom on iOS - all inputs must be at least 16px */
+  textarea, input[type=text], input[type=number], input[type=date], select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    border-radius: var(--r);
+  }
+  
+  /* Fix button tap highlight */
+  .btn, .opt, .choice, .sup-card {
+    -webkit-tap-highlight-color: rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+  
+  /* Fix range input on iOS */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--slate-m);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  
+  /* Prevent text selection flash on tap */
+  .opt, .choice, .sup-card, .btn {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* iOS safe area padding for notch/home indicator */
+  #wrap {
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+}
+
+/* Fix for older iOS versions - date input */
+input[type=date] {
+  min-height: 44px;
+}
+
+/* Minimum touch target size (Apple HIG: 44x44px) */
+.btn { min-height: 44px; }
+.opt { min-height: 48px; }
+.choice { min-height: 56px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-phases">
+    <span style="font-size:12px;font-weight:600;color:#64748b;margin-right:6px">Faza:</span>
+    <div class="ph-pip" id="pp1"></div>
+    <div class="ph-pip" id="pp2"></div>
+    <div class="ph-pip" id="pp3"></div>
+    <div class="ph-pip" id="pp4"></div>
+    <div class="ph-pip" id="pp5"></div>
+    <div class="ph-pip" id="pp6"></div>
+  </div>
+  <div class="tb-right">
+    <span class="phase-tag" id="top-phase-lbl">–</span>
+    <div class="timer" id="timer">⏱ 45:00</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="progbar-wrap">
+  <div class="pb-meta"><span id="pb-label">Napredak</span><span id="pb-pct">0%</span></div>
+  <div class="pb"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+</div>
+
+<!-- ══════════════════════════════════
+     INTRO
+══════════════════════════════════ -->
+<div id="s-intro" class="screen active">
+  <div class="card">
+    <div style="text-align:center;padding:1.5rem 0 1rem">
+      <div style="font-size:60px;margin-bottom:.75rem">🏭</div>
+      <h1>Nabava zaliha sirovina i materijala</h1>
+      <p style="max-width:480px;margin:.5rem auto 0">Obrazovna igra za jedan školski sat (45 min) | Ekonomski smjer | Srednja škola</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:1rem 0">
+        <span class="badge b-blue">✍️ Pisanje definicija</span>
+        <span class="badge b-amber">🎭 Scenariji s analizom</span>
+        <span class="badge b-green">📋 Narudžbenica</span>
+        <span class="badge b-purple">🏢 Simulacija</span>
+        <span class="badge b-slate">📝 Mini esej</span>
+        <span class="badge b-blue">📄 PDF potvrda</span>
+      </div>
+    </div>
+
+    <div class="intro-grid">
+      <div class="intro-phase"><div class="intro-phase-icon">📖</div><div class="intro-phase-num">Faza 1</div><div class="intro-phase-title">Definicije pojmova</div><div class="intro-phase-time">~7 min | 8 pojmova</div></div>
+      <div class="intro-phase"><div class="intro-phase-icon">🧠</div><div class="intro-phase-num">Faza 2</div><div class="intro-phase-title">Kviz + obrazloženje</div><div class="intro-phase-time">~10 min | 10 pitanja</div></div>
+      <div class="intro-phase"><div class="intro-phase-icon">🎭</div><div class="intro-phase-num">Faza 3</div><div class="intro-phase-title">Scenariji + analiza</div><div class="intro-phase-time">~8 min | 5 slučajeva</div></div>
+      <div class="intro-phase"><div class="intro-phase-icon">📋</div><div class="intro-phase-num">Faza 4</div><div class="intro-phase-title">Narudžbenica</div><div class="intro-phase-time">~5 min | 1 obrazac</div></div>
+      <div class="intro-phase"><div class="intro-phase-icon">🏢</div><div class="intro-phase-num">Faza 5</div><div class="intro-phase-title">Simulacija nabave</div><div class="intro-phase-time">~8 min | 4 kvartala</div></div>
+      <div class="intro-phase"><div class="intro-phase-icon">✍️</div><div class="intro-phase-num">Faza 6</div><div class="intro-phase-title">Zaključni esej</div><div class="intro-phase-time">~5 min | min 80 riječi</div></div>
+    </div>
+
+    <div style="background:var(--blue-l);border:1px solid var(--blue-m);border-radius:var(--r);padding:14px;margin-bottom:1.5rem">
+      <strong style="font-size:13px;color:var(--blue-d)">ℹ️ Važno za učenike:</strong>
+      <p style="font-size:13px;color:var(--blue-d);margin-top:4px">Sve faze moraš završiti da dobiješ PDF potvrdu. Pisani odgovori moraju biti dovoljno dugi – sustav provjerava minimalnu duljinu. Piši punim rečenicama!</p>
+    </div>
+
+    <div style="max-width:440px;margin:0 auto">
+      <div class="input-field"><label>Ime i prezime učenika/ce:</label><input type="text" id="inp-name" placeholder="npr. Ana Horvat" maxlength="60"></div>
+      <div class="input-field"><label>Razred:</label><input type="text" id="inp-class" placeholder="npr. 3.b" maxlength="20"></div>
+      <div class="input-field"><label>Naziv škole (neobavezno):</label><input type="text" id="inp-school" placeholder="npr. Ekonomska škola Zagreb" maxlength="80"></div>
+      <div style="text-align:center;margin-top:1.5rem">
+        <button class="btn btn-primary btn-lg" style="width:100%;max-width:320px" onclick="startGame()">▶ Pokreni igru</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 1 – DEFINICIJE
+══════════════════════════════════ -->
+<div id="s-def" class="screen">
+  <div class="card card-blue">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:var(--blue)">1</div>
+      <div>
+        <div class="ph-info-title">Definicije stručnih pojmova</div>
+        <div class="ph-info-sub" id="def-counter">Pojam 1 od 8</div>
+      </div>
+      <div style="margin-left:auto"><span class="badge b-blue" id="def-cat">Osnove</span></div>
+    </div>
+
+    <div style="background:var(--blue-l);border:1px solid var(--blue-m);border-radius:var(--r);padding:14px;margin-bottom:1rem">
+      <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Definiraj pojam:</div>
+      <div style="font-size:22px;font-weight:700;color:var(--blue-d)" id="def-term"></div>
+    </div>
+
+    <div class="fb fb-tip" style="margin-bottom:1rem" id="def-hint"></div>
+
+    <label style="font-size:13px;font-weight:600;color:#64748b;display:block;margin-bottom:6px">Tvoja definicija (punom rečenicom):</label>
+    <textarea id="def-answer" rows="4" placeholder="Upiši svoju definiciju pojma ovdje..." oninput="checkDefLen()"></textarea>
+    <div class="char-count char-warn" id="def-char">Minimum 30 znakova. Upisano: 0</div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+      <div id="def-feedback" style="flex:1;margin-right:12px"></div>
+      <button class="btn btn-primary" id="btn-def-submit" onclick="submitDef()">Potvrdi definiciju →</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">✅ Završeno</div><div class="stat-v" id="def-done">0/8</div></div>
+    <div class="stat"><div class="stat-l">⭐ Bodovi</div><div class="stat-v" id="def-pts">0</div></div>
+    <div class="stat"><div class="stat-l">✍️ Znakova ukupno</div><div class="stat-v" id="def-chars-total">0</div></div>
+    <div class="stat"><div class="stat-l">⏱ Ostalo</div><div class="stat-v" id="def-time">–</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 2 – KVIZ + OBRAZLOŽENJE
+══════════════════════════════════ -->
+<div id="s-quiz" class="screen">
+  <div class="card card-blue">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:#1e40af">2</div>
+      <div>
+        <div class="ph-info-title">Kviz s obrazloženjem odgovora</div>
+        <div class="ph-info-sub" id="q-counter">Pitanje 1 od 10</div>
+      </div>
+      <div style="margin-left:auto"><span class="badge b-blue" id="q-cat">Osnove</span></div>
+    </div>
+
+    <h3 id="q-text" style="font-size:16px;line-height:1.55;margin-bottom:.75rem"></h3>
+    <div class="opts" id="q-opts"></div>
+    <div id="q-fb" style="display:none"></div>
+
+    <div id="q-explain-wrap" style="display:none;margin-top:1rem">
+      <div class="fb fb-tip">✍️ <strong>Sada obrazloži zašto si odabrao/la taj odgovor</strong> – punom rečenicom, vlastitim riječima.</div>
+      <textarea id="q-explain" rows="3" placeholder="Odabrala/o sam ovaj odgovor jer..." oninput="checkExplainLen()"></textarea>
+      <div class="char-count char-warn" id="q-explain-char">Minimum 25 znakova. Upisano: 0</div>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-primary" id="btn-q-next" onclick="nextQuestion()" disabled>Sljedeće pitanje →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">✅ Točno</div><div class="stat-v" id="q-ok">0</div></div>
+    <div class="stat"><div class="stat-l">❌ Netočno</div><div class="stat-v" id="q-no">0</div></div>
+    <div class="stat"><div class="stat-l">⭐ Bodovi</div><div class="stat-v" id="q-pts">0</div></div>
+    <div class="stat"><div class="stat-l">🔥 Niz</div><div class="stat-v" id="q-streak">0</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 3 – SCENARIJI
+══════════════════════════════════ -->
+<div id="s-sc" class="screen">
+  <div class="card card-amber">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:var(--amber)">3</div>
+      <div>
+        <div class="ph-info-title">Poslovni scenariji s analizom</div>
+        <div class="ph-info-sub" id="sc-counter">Scenarij 1 od 5</div>
+      </div>
+      <div style="margin-left:auto"><span class="badge b-amber" id="sc-type">Odluka</span></div>
+    </div>
+
+    <h3 id="sc-title"></h3>
+    <div class="sc-story" id="sc-story"></div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:.75rem;color:var(--slate-d)" id="sc-q"></div>
+    <div class="choice-grid" id="sc-choices"></div>
+    <div id="sc-fb" style="display:none"></div>
+
+    <div id="sc-analysis-wrap" style="display:none;margin-top:1rem">
+      <div class="fb fb-tip">✍️ <strong>Analiza odluke:</strong> U 2-3 rečenice obrazloži svoju odluku i koje poslovne posljedice očekuješ.</div>
+      <textarea id="sc-analysis" rows="4" placeholder="Odabrala/o sam ovu odluku jer... Očekivane poslovne posljedice su..." oninput="checkAnalysisLen()"></textarea>
+      <div class="char-count char-warn" id="sc-analysis-char">Minimum 50 znakova. Upisano: 0</div>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-primary" id="btn-sc-next" onclick="nextScenario()" disabled>Sljedeći scenarij →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">✅ Točnih odluka</div><div class="stat-v" id="sc-ok">0</div></div>
+    <div class="stat"><div class="stat-l">⭐ Bodovi</div><div class="stat-v" id="sc-pts">0</div></div>
+    <div class="stat"><div class="stat-l">📊 Ukupno</div><div class="stat-v" id="sc-total">0</div></div>
+    <div class="stat"><div class="stat-l">⏱ Ostalo</div><div class="stat-v" id="sc-time">–</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 4 – NARUDŽBENICA
+══════════════════════════════════ -->
+<div id="s-narudz" class="screen">
+  <div class="card card-green">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:var(--green)">4</div>
+      <div>
+        <div class="ph-info-title">Popuni narudžbenicu</div>
+        <div class="ph-info-sub">Ispuni sve podatke na temelju zadanog scenarija</div>
+      </div>
+    </div>
+
+    <div class="fb fb-tip" style="margin-bottom:1.25rem">
+      📋 <strong>Zadatak:</strong> Tvrtka <em>„TehnoMetal d.o.o."</em> (OIB: 12345678901) treba naručiti od dobavljača <em>„Čelik-Commerce d.o.o."</em> sljedeće sirovine za
+      proizvodni pogon: <strong>500 kg čeličnih šipki</strong> po cijeni 3,20 €/kg, <strong>200 kom vijaka M10</strong> po cijeni 0,45 €/kom, i <strong>50 l strojnog ulja</strong>
+      po cijeni 8,90 €/l. Rok isporuke je 10 radnih dana od danas. Napomena: roba mora biti označena certifikatom kvalitete ISO 9001.
+    </div>
+
+    <div class="narudz-header">
+      <div>
+        <div style="font-size:11px;opacity:.7;margin-bottom:2px">NARUDŽBENICA / PURCHASE ORDER</div>
+        <div style="font-size:16px;font-weight:700">Br. narudžbe: <span id="narudz-broj">NO-<span id="narudz-year"></span>-001</span></div>
+      </div>
+      <div style="text-align:right;font-size:12px;opacity:.8">Datum izrade: <span id="narudz-datum-prikaz"></span></div>
+    </div>
+    <div class="narudz-body">
+
+      <div class="narudz-section">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px">Podaci o naručitelju</div>
+        <div class="narudz-grid">
+          <div class="narudz-field"><label>Naziv tvrtke naručitelja</label><input type="text" id="nf-naru-naziv" placeholder="Upiši naziv tvrtke..."></div>
+          <div class="narudz-field"><label>OIB naručitelja</label><input type="text" id="nf-naru-oib" placeholder="11 znamenki" maxlength="11"></div>
+          <div class="narudz-field"><label>Adresa naručitelja</label><input type="text" id="nf-naru-adresa" placeholder="Ulica i broj, grad"></div>
+          <div class="narudz-field"><label>Kontakt osoba</label><input type="text" id="nf-naru-kontakt" placeholder="Ime i prezime"></div>
+        </div>
+      </div>
+
+      <div class="narudz-section">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px">Podaci o dobavljaču</div>
+        <div class="narudz-grid">
+          <div class="narudz-field"><label>Naziv tvrtke dobavljača</label><input type="text" id="nf-dob-naziv" placeholder="Upiši naziv dobavljača..."></div>
+          <div class="narudz-field"><label>OIB dobavljača</label><input type="text" id="nf-dob-oib" placeholder="11 znamenki" maxlength="11"></div>
+          <div class="narudz-field"><label>Datum narudžbe</label><input type="date" id="nf-datum"></div>
+          <div class="narudz-field"><label>Traženi rok isporuke</label><input type="text" id="nf-rok" placeholder="npr. 10 radnih dana od datuma narudžbe"></div>
+        </div>
+      </div>
+
+      <div class="narudz-section">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:10px">Stavke narudžbe</div>
+        <div class="narudz-table-wrap">
+        <table class="narudz-table">
+          <thead><tr><th>#</th><th>Naziv artikla</th><th>Jed. mjera</th><th>Količina</th><th>Cijena/jed. (€)</th><th>Ukupno (€)</th></tr></thead>
+          <tbody id="narudz-rows"></tbody>
+          <tfoot>
+            <tr class="total-row"><td colspan="5" style="padding:8px 10px;text-align:right;font-size:13px">UKUPNO BEZ PDV-a:</td><td style="padding:8px 10px" id="narudz-subtotal">0,00 €</td></tr>
+            <tr class="total-row"><td colspan="5" style="padding:8px 10px;text-align:right;font-size:13px">PDV (25%):</td><td style="padding:8px 10px" id="narudz-pdv">0,00 €</td></tr>
+            <tr class="total-row" style="background:#e2e8f0"><td colspan="5" style="padding:8px 10px;text-align:right;font-size:14px;font-weight:700">UKUPNO S PDV-om:</td><td style="padding:8px 10px;font-size:14px;font-weight:700" id="narudz-total">0,00 €</td></tr>
+          </tfoot>
+        </table>
+        </div>
+      </div>
+
+      <div class="narudz-section">
+        <div class="narudz-grid">
+          <div class="narudz-field"><label>Napomena / Posebni uvjeti</label><textarea id="nf-napomena" rows="2" placeholder="Posebni uvjeti isporuke, zahtjevi za certifikate..."></textarea></div>
+          <div class="narudz-field">
+            <label>Odobreno od (potpis/naziv)</label><input type="text" id="nf-potpis" placeholder="Ime i prezime ovlaštene osobe">
+            <label style="margin-top:8px">Funkcija/Radno mjesto</label><input type="text" id="nf-funkcija" placeholder="npr. Voditelj nabave">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="narudz-validation" style="margin-top:1rem"></div>
+    <div style="text-align:right;margin-top:1rem">
+      <button class="btn btn-green" onclick="validateNarudz()">✅ Potvrdi narudžbenicu →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 5 – SIMULACIJA
+══════════════════════════════════ -->
+<div id="s-sim" class="screen">
+  <div class="card card-green">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:var(--green)">5</div>
+      <div>
+        <div class="ph-info-title">Simulacija upravljanja nabavom</div>
+        <div class="ph-info-sub" id="sim-q-lbl">Kvartal 1 od 4 – "ZalihaPlus d.o.o."</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-l">💰 Proračun</div><div class="stat-v" id="sim-budget">6 500 €</div></div>
+      <div class="stat"><div class="stat-l">📦 Zalihe</div><div class="stat-v" id="sim-stock">200</div></div>
+      <div class="stat"><div class="stat-l">⭐ Reputacija</div><div class="stat-v" id="sim-rep">100</div></div>
+      <div class="stat"><div class="stat-l">💹 Profit</div><div class="stat-v" id="sim-profit">0 €</div></div>
+    </div>
+
+    <div id="sim-ev-box" class="fb fb-info" style="margin-bottom:1rem"></div>
+
+    <div id="sim-sup-step" style="display:none">
+      <h3 style="margin-bottom:.75rem">Korak 1: Odaberi dobavljača</h3>
+      <p style="font-size:14px;color:#64748b;margin-bottom:1rem">Potražnja ovog kvartala: <strong id="sim-dem" style="color:var(--slate-d)"></strong> jed. &nbsp;|&nbsp; Trebaš naručiti: <strong id="sim-need" style="color:var(--blue)"></strong> jed.</p>
+      <div class="sup-grid" id="sim-sup-grid"></div>
+      <div style="text-align:right;margin-top:1rem"><button class="btn btn-primary" id="btn-sim-qty" onclick="simGoQty()" disabled>Odredi količinu →</button></div>
+    </div>
+
+    <div id="sim-qty-step" style="display:none">
+      <h3 style="margin-bottom:.75rem">Korak 2: Narudžbenica</h3>
+      <div id="sim-sup-info-box" class="fb fb-info" style="margin-bottom:1rem"></div>
+      <div class="sim-qty-wrap" style="display:flex;align-items:center;gap:12px;margin:1rem 0;flex-wrap:wrap">
+        <label style="font-size:14px;color:#64748b;flex:1;min-width:140px">Količina narudžbe (jed.):</label>
+        <input type="range" id="sim-qty-r" min="0" max="500" step="10" value="100" oninput="simUpdateQty()" style="flex:2;min-width:160px;accent-color:var(--blue)">
+        <span id="sim-qty-val" style="font-weight:700;min-width:55px;text-align:right">100 jed.</span>
+      </div>
+      <div id="sim-qty-prev" style="font-size:14px;color:#64748b;margin:.5rem 0"></div>
+      <div id="sim-qty-warn" style="font-size:13px;color:var(--red);margin:.25rem 0"></div>
+      <div style="display:flex;gap:10px;margin-top:1rem">
+        <button class="btn btn-outline" onclick="simStepShow('sup')">← Natrag</button>
+        <button class="btn btn-green" onclick="simConfirm()">✅ Potvrdi narudžbu</button>
+      </div>
+    </div>
+
+    <div id="sim-res-step" style="display:none">
+      <h3 style="margin-bottom:.75rem">📊 Rezultati kvartala</h3>
+      <div id="sim-res-details"></div>
+      <div style="text-align:right;margin-top:1rem">
+        <button class="btn btn-primary" id="btn-sim-next" onclick="simNext()">Sljedeći kvartal →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FAZA 6 – ESEJ
+══════════════════════════════════ -->
+<div id="s-esej" class="screen">
+  <div class="card card-purple">
+    <div class="ph-hdr">
+      <div class="ph-num" style="background:var(--purple)">6</div>
+      <div>
+        <div class="ph-info-title">Zaključni mini esej</div>
+        <div class="ph-info-sub">Minimum 80 riječi – piši punim rečenicama</div>
+      </div>
+    </div>
+
+    <div class="esej-prompts">
+      <strong style="font-size:13px;color:#78350f">📝 Pitanje za esej:</strong>
+      <p style="font-size:14px;color:#78350f;margin-top:6px;line-height:1.7">Na temelju svega što si naučio/la kroz ovu igru, odgovori na sljedeće:</p>
+      <ul>
+        <li>Što je nabava zaliha i zašto je važna za svako poduzeće?</li>
+        <li>Koji su ključni kriteriji pri odabiru dobavljača i zašto ih je važno balansirati?</li>
+        <li>Kakve posljedice može imati loše upravljanje zalihama (i previše i premalo)?</li>
+        <li>Što bi savjetovao/la mladom voditelju nabave u novom poduzeću?</li>
+      </ul>
+    </div>
+
+    <label style="font-size:13px;font-weight:600;color:#64748b;display:block;margin-bottom:6px">Tvoj odgovor (minimum 80 riječi):</label>
+    <textarea id="esej-text" rows="10" placeholder="Nabava zaliha sirovina i materijala je..." oninput="checkEsej()" style="font-size:15px;line-height:1.7"></textarea>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <div>
+        <span class="word-count wc-low" id="esej-wc">0 / 80 riječi</span>
+      </div>
+      <div style="font-size:13px;color:#64748b" id="esej-chars">Upisano znakova: 0</div>
+    </div>
+
+    <div id="esej-warn" style="font-size:13px;color:var(--red);margin-top:6px"></div>
+    <div style="text-align:right;margin-top:1.25rem">
+      <button class="btn btn-primary btn-lg" id="btn-finish" style="width:100%" onclick="finishGame()" disabled>🎓 Završi igru i generiraj rezultate →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     END
+══════════════════════════════════ -->
+<div id="s-end" class="screen">
+  <div class="card" style="text-align:center;padding:2rem">
+    <div style="font-size:72px;margin-bottom:1rem" id="end-icon">🏆</div>
+    <h2 style="font-size:22px" id="end-title">Čestitamo!</h2>
+    <p id="end-msg" style="color:#64748b;max-width:420px;margin:.5rem auto 1.5rem"></p>
+
+    <div class="stats" style="margin-bottom:1.5rem">
+      <div class="stat"><div class="stat-l">Ukupni bodovi</div><div class="stat-v" id="end-total">–</div></div>
+      <div class="stat"><div class="stat-l">Faze 1-2</div><div class="stat-v" id="end-p12">–</div></div>
+      <div class="stat"><div class="stat-l">Faze 3-4</div><div class="stat-v" id="end-p34">–</div></div>
+      <div class="stat"><div class="stat-l">Faze 5-6</div><div class="stat-v" id="end-p56">–</div></div>
+    </div>
+
+    <div class="card" style="text-align:left;max-width:500px;margin:0 auto 1.5rem;box-shadow:none">
+      <table class="result-table">
+        <tr><td>👤 Učenik/ca</td><td id="er-name">–</td></tr>
+        <tr><td>🏫 Razred</td><td id="er-class">–</td></tr>
+        <tr><td>📖 Faza 1 – Definicije (8 pojmova)</td><td id="er-p1">–</td></tr>
+        <tr><td>🧠 Faza 2 – Kviz s obrazloženjem (10 pit.)</td><td id="er-p2">–</td></tr>
+        <tr><td>🎭 Faza 3 – Scenariji s analizom (5 sl.)</td><td id="er-p3">–</td></tr>
+        <tr><td>📋 Faza 4 – Narudžbenica</td><td id="er-p4">–</td></tr>
+        <tr><td>🏢 Faza 5 – Simulacija nabave</td><td id="er-p5">–</td></tr>
+        <tr><td>✍️ Faza 6 – Zaključni esej</td><td id="er-p6">–</td></tr>
+        <tr><td>⏱ Utrošeno vrijeme</td><td id="er-time">–</td></tr>
+        <tr><td style="font-size:16px">🎓 Ukupna ocjena</td><td><div class="grade-display" id="er-grade">–</div></td></tr>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-green btn-lg" style="flex:1;min-width:200px;max-width:300px" onclick="genPDF()">📄 Preuzmi PDF potvrdu</button>
+      <button class="btn btn-outline" style="flex:1;min-width:160px;max-width:200px" onclick="location.reload()">🔄 Igraj ponovo</button>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin-top:1rem">Isprintaj ili pošalji PDF potvrdu svom nastavniku/ici na potpis.</p>
+  </div>
+</div>
+
+</div><!-- #wrap -->
+
+<!-- iOS PDF Modal -->
+<div id="ios-pdf-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-size:48px;margin-bottom:12px">📄</div>
+    <h2 style="font-size:18px;margin-bottom:8px;color:#0f172a">PDF je spreman!</h2>
+    <p style="font-size:14px;color:#475569;line-height:1.6;margin-bottom:20px">Klikni gumb ispod da otvoriš PDF. Zatim klikni <strong>ikon dijeljenja</strong> (□↑) pa <strong>"Spremi u Datoteke"</strong> ili <strong>"Isprintaj"</strong>.</p>
+    <a id="ios-pdf-link" href="#" target="_blank" style="display:block;background:#1d4ed8;color:#fff;padding:14px 24px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:12px" onclick="document.getElementById('ios-pdf-modal').style.display='none'">📂 Otvori PDF</a>
+    <button onclick="document.getElementById('ios-pdf-modal').style.display='none'" style="background:none;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 24px;font-size:14px;color:#64748b;cursor:pointer;width:100%">Zatvori</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA – DEFINITIONS
+═══════════════════════════════════════════════════ */
+const DEFS=[
+  {term:"Nabava",cat:"Osnove",hint:"Razmisli o procesu kojim tvrtka dolazi do sirovina i materijala potrebnih za rad.",model:"Nabava je poslovni proces kojim poduzeće osigurava sirovine, materijale, robu i usluge potrebne za obavljanje svoje djelatnosti, po najpovoljnijim uvjetima."},
+  {term:"Dobavljač",cat:"Sudionici",hint:"To je pravna ili fizička osoba koja nešto isporučuje drugoj tvrtki.",model:"Dobavljač je pravna ili fizička osoba koja redovito isporučuje sirovine, materijale, poluproizvode ili gotovu robu poduzeću naručitelju na temelju ugovora ili narudžbe."},
+  {term:"Narudžbenica",cat:"Dokumenti",hint:"Razmisli o službenom dokumentu koji prethodi isporuci robe.",model:"Narudžbenica je službeni pismeni dokument kojim kupac (naručitelj) od dobavljača naručuje određenu vrstu i količinu robe, uz navođenje dogovorene cijene, roka i uvjeta isporuke."},
+  {term:"Zaliha",cat:"Osnove",hint:"Radi se o količini materijala ili robe koja se nalazi u skladištu.",model:"Zaliha je količina sirovina, materijala, poluproizvoda ili gotovih proizvoda koje poduzeće drži na skladištu kako bi osiguralo kontinuitet proizvodnje ili prodaje."},
+  {term:"Just-in-Time (JIT)",cat:"Koncepti",hint:"Japanska filozofija koja minimizira zalihe nabavljanjem materijala točno na vrijeme.",model:"Just-in-Time (JIT) je upravljačka filozofija koja podrazumijeva nabavu materijala i sirovina točno u trenutku kada su potrebni u procesu proizvodnje, čime se minimiziraju troškovi skladištenja i zaliha."},
+  {term:"Primka",cat:"Dokumenti",hint:"Dokument koji se sastavlja pri fizičkom preuzimanju robe od dobavljača.",model:"Primka je poslovni dokument koji se sastavlja pri preuzimanju robe od dobavljača, a kojim se potvrđuje da je isporučena roba odgovara narudžbi po vrsti, količini i kvaliteti."},
+  {term:"Sigurnosna zaliha",cat:"Koncepti",hint:"Razmisli o 'tamponu' koji štiti od nepredviđenih situacija.",model:"Sigurnosna zaliha (safety stock) je minimalna razina zaliha koja se održava kao zaštita od nepredviđenih situacija poput kašnjenja dobavljača, naglih porasta potražnje ili kvarova u opskrbnom lancu."},
+  {term:"ABC analiza zaliha",cat:"Analitika",hint:"Metoda razvrstavanje zaliha prema njihovoj vrijednosti ili važnosti.",model:"ABC analiza je metoda upravljanja zalihama koja razvrstava artikle u tri kategorije: A (mali broj artikala visoke vrijednosti – zahtijevaju najveću kontrolu), B (srednja kategorija) i C (veliki broj artikala niske vrijednosti – minimalna kontrola)."}
+];
+
+/* ═══════════════════════════════════════════════════
+   DATA – QUIZ
+═══════════════════════════════════════════════════ */
+const QUIZ=[
+  {cat:"Dobavljači",q:"Koji je NAJVAŽNIJI kompromis pri odabiru dobavljača?",opts:["Uvijek birati najjeftinijeg dobavljača","Birati samo lokalnog dobavljača","Balansirati cijenu, kvalitetu, rok isporuke i pouzdanost","Birati dobavljača s najkraćim rokom plaćanja"],a:2,tip:"Odabir dobavljača je višekriterijska odluka. Najjeftinija opcija često znači kompromis na kvaliteti ili pouzdanosti."},
+  {cat:"Troškovi",q:"Koji trošak nastaje ako držimo PREVIŠE zaliha?",opts:["Kazna za kašnjenje isporuke","Troškovi skladištenja, osiguranja i vezivanja kapitala","Troškovi hitne nabave","Gubitak kupaca zbog nedostupnosti"],a:1,tip:"Prekomjerne zalihe vežu kapital koji bi mogao biti produktivno uložen drugdje, plus plaćamo skladišni prostor i osiguranje."},
+  {cat:"Rizici",q:"Što je 'stockout' situacija u upravljanju zalihama?",opts:["Situacija kada imamo previše zaliha na skladištu","Situacija kada zalihe padnu na nulu pa ne možemo podmiriti potražnju","Kada dobavljač kasni s isporukom samo 1 dan","Kada cijena materijala naglo padne na tržištu"],a:1,tip:"Stockout može potpuno zaustaviti proizvodnju, uzrokovati kašnjenje isporuke kupcima i trajno našteti poslovnoj reputaciji."},
+  {cat:"Koncepti",q:"Što znači 'reorder point' (točka ponovne narudžbe)?",opts:["Maksimalna razina zaliha koje smijemo imati","Razina zaliha pri kojoj moramo poslati novu narudžbu dobavljaču","Minimalna razina ispod koje zalihe nikad ne smiju pasti","Optimalna, idealna razina zaliha"],a:1,tip:"Reorder point = prosječna dnevna potrošnja × rok isporuke + sigurnosna zaliha. Signal je za slanje nove narudžbe."},
+  {cat:"Dokumenti",q:"Koji dokument PRETHODI isporuci robe od dobavljača?",opts:["Primka (goods receipt note)","Otpremnica (delivery note)","Narudžbenica (purchase order)","Faktura (invoice)"],a:2,tip:"Narudžbenica se šalje PRIJE isporuke i inicira je. Primka se sastavlja TEK NAKON primitka robe, a faktura je zahtjev za plaćanje."},
+  {cat:"Analitika",q:"Što je 'koeficijent obrta zaliha'?",opts:["Postotak oštećenih zaliha u godini","Broj puta godišnje kada su zalihe potpuno obnovljene","Razlika između nabavne i prodajne cijene","Trošak jednog dana skladištenja"],a:1,tip:"Koeficijent obrta = Troškovi prodane robe / Prosječne zalihe. Visok koeficijent znači učinkovito i brzo kruženje zaliha."},
+  {cat:"Rizici",q:"Koja je NAJVEĆA opasnost strategije 'single sourcing' (jedan dobavljač)?",opts:["Prevelike količine narudžbe","Potpuna ovisnost – ako taj dobavljač zakaže, cijela opskrba staje","Preskupi administrativni troškovi","Preniski popusti na velike narudžbe"],a:1,tip:"Pandemija Covid-19 dramatično je pokazala rizik ovisnosti o jednom geografskom izvoru. Diversifikacija dobavljača je ključna za otpornost."},
+  {cat:"Koncepti",q:"Što znači metoda 'FIFO' u upravljanju zalihama?",opts:["First In, First Out – prva primljena roba se prva koristi","Finish It, Find Others – troši dok nema pa naruči odmah","Fast Inventory, Fixed Output – brza nabava, stabilna prodaja","First Invoice, Final Order – plaćaj odmah, naruči zadnji"],a:0,tip:"FIFO (First In, First Out) posebno je važna kod lako kvarljive robe i prehrambenih proizvoda – starija roba izlazi prva."},
+  {cat:"Dobavljači",q:"Što je 'vendor rating' sustav u nabavi?",opts:["Ocjena koju dobavljač daje kupcu za loše plaćanje","Sustavno vrednovanje dobavljača prema kriterijima kvalitete, rokova i cijene","Popust koji dobavljač nudi za vjernost i dugoročnu suradnju","Certifikat o kvaliteti koji dobavljač mora imati"],a:1,tip:"Vendor rating omogućuje objektivnu usporedbu dobavljača i donošenje boljih odluka o odabiru i nastavku suradnje."},
+  {cat:"Etika",q:"Voditelj nabave dobiva ponudu skupog poklona od dobavljača pred raspisom tendera. Što treba učiniti?",opts:["Prihvati poklon, ali ostani objektivan pri ocjeni","Prihvati poklon i nagradi tog dobavljača ugovorom","Odbij poklon i prijavi situaciju nadređenima/HR-u","Odbij, ali o tome šuti i nastavi normalno"],a:2,tip:"Korupcija u nabavi je kazneno djelo i narušava tržišno natjecanje. Transparentnost i prijava jedini su etički ispravni odgovor."}
+];
+
+/* ═══════════════════════════════════════════════════
+   DATA – SCENARIOS
+═══════════════════════════════════════════════════ */
+const SCEN=[
+  {type:"Hitna odluka",title:"Kvar na stroju uništio zalihe!",
+   story:"Tvrtka METALOPLAST d.o.o. proizvodi automobilske dijelove. Jutros je kvar na stroju uništio 40% zaliha čelika. Redovni dobavljač može isporučiti novu pošiljku tek za 14 dana, a imaš potpisanu narudžbu ključnog kupca s rokom isporuke od 5 dana. Kašnjenje bi značilo ugovornu kaznu od 5.000 € i moguć gubitak kupca.",
+   q:"Koji je optimalni korak?",
+   choices:[{t:"Čekaj redovnog dobavljača – jeftinije",d:"Nema dodatnih troškova nabave, ali propuštas rok.",ok:false},{t:"Hitna nabava od lokalnog – skuplje 30%",d:"Osigurava pravovremenu isporuku i zadovoljstvo kupca.",ok:true},{t:"Otkaži narudžbu kupcu",d:"Nema troška nabave, ali gubiš kupca i plaćaš kaznu.",ok:false},{t:"Lažiraj dokumentaciju o zalihi",d:"Kratkotrajno rješenje s ozbiljnim pravnim posljedicama.",ok:false}],
+   tip:"✅ Hitna nabava je optimalna. Trošak 30% skuplje sirovine manji je od ugovorne kazne + gubitka kupca. Kratkoročno skuplje, dugoročno isplativije."},
+  {type:"Pregovaranje",title:"Pregovaranje s dugogodišnjim dobavljačem",
+   story:"Tvrtka kupuje sirovine od Dobavljača Alfa već 5 godina. Pronašla si novog dobavljača Beta koji nudi 20% nižu cijenu, ali bez referenci i jamstva kvalitete. Dobavljač Alfa nikad nije zakasnio ni imao reklamacija. Pred potpisom novog godišnjeg ugovora.",
+   q:"Koja je optimalna pregovaračka strategija?",
+   choices:[{t:"Odmah potpiši s Betom – 20% ušteda",d:"Maksimalna kratkoročna ušteda bez pregovaranja.",ok:false},{t:"Iskoristi Betinu ponudu kao polugu za pregovore s Alfom",d:"Pokaži Alfi konkurentsku ponudu i pregovaraj bolju cijenu.",ok:true},{t:"Uzmi oba dobavljača – 50/50 bez pregovora",d:"Diversifikacija, ali plaćaš više nego što trebaš.",ok:false},{t:"Ne čini ništa, ostani s Alfom po staroj cijeni",d:"Izbjegavaš rizik, ali propuštaš moguće uštede.",ok:false}],
+   tip:"✅ Iskorištavanje konkurentske ponude kao pregovaračke poluge je legitimna i učinkovita strategija. Alfa, koji te poznaje i cijeni, imat će motiv prilagoditi cijenu."},
+  {type:"Planiranje",title:"Sezonski skokovi potražnje",
+   story:"Tvrtka SLADOLEDO d.o.o. bilježi rast potražnje od 300% u ljetnoj sezoni (lipanj–kolovoz). Dobavljači mliječnih sirovina imaju rok isporuke od 21 dan. Prošle godine ste ostali bez zaliha u kolovozu i izgubili prihod od 40.000 €.",
+   q:"Kako planirati nabavu sirovina za ljetnu sezonu?",
+   choices:[{t:"Naruči kada ponestane – JIT pristup",d:"Minimalne zalihe, ali rizik nedostatka u vršnom periodu.",ok:false},{t:"Počni graditi zalihe u veljači – postupno povećanje",d:"Proaktivno planiranje s dovoljnim vremenskim prozorom.",ok:true},{t:"Naruči sve godišnje zalihe u siječnju",d:"Sigurna opskrba, ali ogromni troškovi skladištenja.",ok:false},{t:"Pronađi bliže dobavljače tek u lipnju",d:"Reagiraš kasno – nema vremena za postavljanje suradnje.",ok:false}],
+   tip:"✅ Proaktivno planiranje s rokom isporuke od 21 dan zahtijeva početak izgradnje zaliha minimalno 2-3 mjeseca unaprijed. JIT ne funkcionira u sezonskim industrijama s dugim rokovima isporuke."},
+  {type:"Analiza troškova",title:"ABC analiza – gdje usmjeriti kontrolu?",
+   story:"Tvrtka ima 200 vrsta materijala. Analiza vrijednosti zaliha pokazuje: 12 vrsta = 72% ukupne vrijednosti (A kategorija), 38 vrsta = 20% vrijednosti (B kategorija), 150 vrsta = 8% vrijednosti (C kategorija). Tim nabave ima ograničene kapacitete kontrole.",
+   q:"Kako rasporediti resurse kontrole zaliha?",
+   choices:[{t:"Jednaka pažnja svim 200 vrsta",d:"Demokratično, ali neefikasno – malo gdje vrijedi trošiti.",ok:false},{t:"ABC metoda: A pod strogom kontrolom, C automatizirano",d:"12 ključnih artikala pod dnevnom kontrolom, ostatak automatski.",ok:true},{t:"Fokus na C kategoriju – ima ih najviše",d:"Velika ulaganja resursa za artikle male vrijednosti.",ok:false},{t:"Outsourcing cijelog upravljanja zalihama",d:"Prenosi odgovornost, ali gubi se kontrola i povećavaju troškovi.",ok:false}],
+   tip:"✅ ABC analiza nalaže da se 80% pažnje usmjeri na A kategoriju (12 artikala = 72% vrijednosti). C kategorija može biti automatizirana s minimalnim nadzorom – to je najefikasnija upotreba ograničenih resursa."},
+  {type:"Krizni menadžment",title:"Prekid opskrbnog lanca",
+   story:"Naturalna katastrofa prekinula je brodske rute iz Azije. Tvoj jedini dobavljač elektroničkih komponenti isporučuje iz Kine. Predviđeni prekid: 3-4 mjeseca. Trenutne zalihe traju 6 tjedana. Postoji europski dobavljač koji je 40% skuplji, ali može isporučiti za 5 dana.",
+   q:"Koja je dugoročno ispravna strategija?",
+   choices:[{t:"Čekaj – situacija je privremena",d:"Minimalni trošak, ali zastoj u proizvodnji za ~2 tjedna.",ok:false},{t:"Kupi maksimalne zalihe dok brodske rute rade",d:"Privremeno rješenje, ali bez dugoročne otpornosti.",ok:false},{t:"Uvedi europskog dobavljača kao stalnog partnera",d:"40% skuplji, ali drastično smanjuje rizik prekida u budućnosti.",ok:true},{t:"Zaustavi proizvodnju dok situacija ne prođe",d:"Štedi novac na nabavi, ali gubi prihode i kupce.",ok:false}],
+   tip:"✅ Diversifikacija dobavljača po geografskim regijama je temeljni princip otpornog opskrbnog lanca. Covid-19 je to dramatično potvrdio. Kratkoročni trošak od 40% isplati se dugoročnom sigurnošću."}
+];
+
+/* ═══════════════════════════════════════════════════
+   SIM DATA
+═══════════════════════════════════════════════════ */
+const SIM_SUPS=[
+  {id:'A',name:'Alfa Pro',icon:'🏢',price:6.00,days:3,quality:0.98,rel:0.95,desc:'Pouzdani, visoka kvaliteta',min:50},
+  {id:'B',name:'Beta Trade',icon:'🏭',price:4.20,days:7,quality:0.88,rel:0.80,desc:'Jeftiniji, srednja pouzdanost',min:100},
+  {id:'C',name:'Gama Global',icon:'🌍',price:3.30,days:14,quality:0.82,rel:0.70,desc:'Najjeftiniji, visok rizik',min:200},
+  {id:'D',name:'Lokalni Express',icon:'🏪',price:7.30,days:1,quality:0.99,rel:0.99,desc:'Najbrži, najskuplji',min:10}
+];
+const SIM_EVS=[
+  {txt:'📦 Stabilno tržište – normalni uvjeti.',mod:{}},
+  {txt:'⬆️ Troškovi transporta porasli 15% zbog cijena goriva!',mod:{pm:1.15}},
+  {txt:'📈 Sezonska potražnja: trebat ćeš 25% više materijala!',mod:{dm:1.25}},
+  {txt:'💸 Beta Trade nudi 10% popust ovaj kvartal!',mod:{ds:'B',d:0.10}},
+  {txt:'🚫 Gama Global ima probleme s carinom – nedostupan!',mod:{blk:'C'}},
+  {txt:'🤝 Uspješni pregovori – svi dobavljači daju 5% popusta!',mod:{pm:0.95}},
+  {txt:'🌊 Poplava u skladištu Alfe – Alfa Pro nedostupan ovaj kvartal!',mod:{blk:'A'}},
+  {txt:'📜 Novi ISO standard – minimalna kvaliteta materijala mora biti 90%!',mod:{mq:0.90}}
+];
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let sName='',sClass='',sSchool='';
+let timerInt=null,secLeft=2700,startTime=null;
+let totalPts=0;
+
+// F1
+let di=0,defPts=0,defCharsTotal=0,defAnswers=[];
+// F2
+let qi=0,qCorrect=0,qPts=0,qStreak=0,qExplains=[];
+// F3
+let sci=0,scCorrect=0,scPts=0,scAnalyses=[];
+// F4
+let narudzPts=0,narudzData={};
+// F5
+let simQ=1,simBudget=6500,simStock=200,simRep=100,simProfit=0,simPts=0;
+let simDem=0,simSel=null,simEv={},simLog=[];
+// F6
+let esejText='',esejPts=0;
+
+const eur=n=>n.toLocaleString('hr-HR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const wc=t=>t.trim().split(/\s+/).filter(w=>w.length>0).length;
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.className='screen');document.getElementById(id).className='screen active';window.scrollTo({top:0,behavior:'smooth'});}
+function tmStr(){let m=Math.floor(secLeft/60),s=secLeft%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+function elapsed(){let e=2700-secLeft;let m=Math.floor(e/60),s=e%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+
+function startTimer(){
+  timerInt=setInterval(()=>{
+    secLeft--;
+    let el=document.getElementById('timer');
+    el.textContent='⏱ '+tmStr();
+    if(secLeft<=300)el.className='timer warn';
+    if(secLeft<=0)clearInterval(timerInt);
+    ['def-time','sc-time'].forEach(id=>{let x=document.getElementById(id);if(x)x.textContent=tmStr();});
+  },1000);
+}
+
+function setPips(active){
+  for(let i=1;i<=6;i++){
+    let p=document.getElementById('pp'+i);
+    p.className='ph-pip'+(i<active?' done':i===active?' active':'');
+  }
+}
+
+function setProgress(val,label){
+  document.getElementById('pb-fill').style.width=val+'%';
+  document.getElementById('pb-pct').textContent=Math.round(val)+'%';
+  if(label)document.getElementById('pb-label').textContent=label;
+}
+
+/* ═══════════════════════════════════════════════════
+   START
+═══════════════════════════════════════════════════ */
+function startGame(){
+  sName=document.getElementById('inp-name').value.trim();
+  sClass=document.getElementById('inp-class').value.trim();
+  sSchool=document.getElementById('inp-school').value.trim()||'–';
+  if(!sName){alert('Upiši svoje ime i prezime!');return;}
+  if(!sClass){alert('Upiši razred!');return;}
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('progbar-wrap').style.display='block';
+  document.getElementById('top-name')&&null;
+  startTimer();
+  startPhase1();
+}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 1 – DEFINITIONS
+═══════════════════════════════════════════════════ */
+function startPhase1(){
+  di=0;defPts=0;defCharsTotal=0;defAnswers=[];
+  setPips(1);
+  document.getElementById('top-phase-lbl').textContent='Faza 1 – Definicije';
+  setProgress(0,'Faza 1 – Definicije pojmova');
+  show('s-def');
+  renderDef();
+}
+
+function renderDef(){
+  let d=DEFS[di];
+  document.getElementById('def-counter').textContent='Pojam '+(di+1)+' od '+DEFS.length;
+  document.getElementById('def-cat').textContent=d.cat;
+  document.getElementById('def-term').textContent=d.term;
+  document.getElementById('def-hint').innerHTML='💡 <strong>Smjernica:</strong> '+d.hint;
+  document.getElementById('def-answer').value='';
+  document.getElementById('def-char').textContent='Minimum 30 znakova. Upisano: 0';
+  document.getElementById('def-char').className='char-count char-warn';
+  document.getElementById('def-feedback').innerHTML='';
+  document.getElementById('btn-def-submit').disabled=false;
+  setProgress((di/DEFS.length)*14,'Faza 1 – Definicije pojmova');
+  updateDefStats();
+}
+
+function checkDefLen(){
+  let v=document.getElementById('def-answer').value;
+  let cc=document.getElementById('def-char');
+  cc.textContent='Minimum 30 znakova. Upisano: '+v.length;
+  cc.className='char-count '+(v.length>=30?'char-ok':'char-warn');
+}
+
+function submitDef(){
+  let v=document.getElementById('def-answer').value.trim();
+  if(v.length<30){alert('Definicija je prekratka! Napiši minimalno 30 znakova.');return;}
+  let d=DEFS[di];
+  defAnswers.push({term:d.term,answer:v,model:d.model});
+  defCharsTotal+=v.length;
+  defPts+=10;totalPts+=10;
+  document.getElementById('def-feedback').innerHTML='<div class="fb fb-ok" style="margin:0">✅ Definicija zabilježena! <strong>Model definicije:</strong> '+d.model+'</div>';
+  document.getElementById('btn-def-submit').disabled=true;
+  di++;
+  if(di>=DEFS.length){setTimeout(endPhase1,1800);}
+  else setTimeout(()=>{renderDef();},1800);
+  updateDefStats();
+}
+
+function updateDefStats(){
+  document.getElementById('def-done').textContent=di+'/'+DEFS.length;
+  document.getElementById('def-pts').textContent=defPts;
+  document.getElementById('def-chars-total').textContent=defCharsTotal;
+}
+
+function endPhase1(){startPhase2();}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 2 – QUIZ
+═══════════════════════════════════════════════════ */
+function startPhase2(){
+  qi=0;qCorrect=0;qPts=0;qStreak=0;qExplains=[];
+  setPips(2);
+  document.getElementById('top-phase-lbl').textContent='Faza 2 – Kviz';
+  show('s-quiz');
+  renderQ();
+}
+
+function renderQ(){
+  let q=QUIZ[qi];
+  document.getElementById('q-counter').textContent='Pitanje '+(qi+1)+' od '+QUIZ.length;
+  document.getElementById('q-cat').textContent=q.cat;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-fb').style.display='none';
+  document.getElementById('q-explain-wrap').style.display='none';
+  document.getElementById('q-explain').value='';
+  document.getElementById('btn-q-next').disabled=true;
+  setProgress(14+(qi/QUIZ.length)*16,'Faza 2 – Kviz s obrazloženjem');
+
+  let od=document.getElementById('q-opts');
+  od.innerHTML='';
+  let lbls=['A','B','C','D'];
+  q.opts.forEach((o,i)=>{
+    let b=document.createElement('button');
+    b.className='opt';
+    b.textContent=lbls[i]+') '+o;
+    b.onclick=()=>answerQ(i);
+    od.appendChild(b);
+  });
+  updateQStats();
+}
+
+function answerQ(i){
+  let q=QUIZ[qi];
+  let btns=document.querySelectorAll('.opt');
+  btns.forEach(b=>b.disabled=true);
+  let fb=document.getElementById('q-fb');
+  let correct=i===q.a;
+  if(correct){
+    btns[i].classList.add('correct');
+    qCorrect++;qStreak++;
+    let bonus=qStreak>=3?15:10;
+    qPts+=bonus;totalPts+=bonus;
+    fb.innerHTML='<div class="fb fb-ok">✅ <strong>Točno!</strong>'+(qStreak>=3?' 🔥 Bonus za niz od '+qStreak+'!':``)+'<br><em>'+q.tip+'</em></div>';
+  } else {
+    btns[i].classList.add('wrong');
+    btns[q.a].classList.add('correct');
+    qStreak=0;
+    fb.innerHTML='<div class="fb fb-no">❌ <strong>Netočno.</strong> Točan odgovor je označen zeleno.<br><em>'+q.tip+'</em></div>';
+  }
+  fb.style.display='block';
+  document.getElementById('q-explain-wrap').style.display='block';
+  updateQStats();
+}
+
+function checkExplainLen(){
+  let v=document.getElementById('q-explain').value;
+  let cc=document.getElementById('q-explain-char');
+  cc.textContent='Minimum 25 znakova. Upisano: '+v.length;
+  cc.className='char-count '+(v.length>=25?'char-ok':'char-warn');
+  document.getElementById('btn-q-next').disabled=v.length<25;
+}
+
+function nextQuestion(){
+  let expl=document.getElementById('q-explain').value.trim();
+  if(expl.length<25){alert('Obrazloženje je prekratko! Napiši barem 25 znakova.');return;}
+  qExplains.push({q:QUIZ[qi].q,expl});
+  qi++;
+  if(qi>=QUIZ.length){startPhase3();return;}
+  renderQ();
+}
+
+function updateQStats(){
+  document.getElementById('q-ok').textContent=qCorrect;
+  document.getElementById('q-no').textContent=Math.max(0,qi-qCorrect+(document.getElementById('q-fb').style.display!='none'&&!document.querySelector('.opt.correct')?0:0));
+  let wrong=qi-(qCorrect)+(document.getElementById('q-opts').querySelector('.wrong')?1:0);
+  document.getElementById('q-no').textContent=Math.max(0,wrong-Math.max(0,wrong-qi));
+  document.getElementById('q-pts').textContent=qPts;
+  document.getElementById('q-streak').textContent=qStreak+(qStreak>=3?' 🔥':'');
+}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 3 – SCENARIOS
+═══════════════════════════════════════════════════ */
+function startPhase3(){
+  sci=0;scCorrect=0;scPts=0;scAnalyses=[];
+  setPips(3);
+  document.getElementById('top-phase-lbl').textContent='Faza 3 – Scenariji';
+  show('s-sc');
+  renderSc();
+}
+
+function renderSc(){
+  let sc=SCEN[sci];
+  document.getElementById('sc-counter').textContent='Scenarij '+(sci+1)+' od '+SCEN.length;
+  document.getElementById('sc-type').textContent=sc.type;
+  document.getElementById('sc-title').textContent=sc.title;
+  document.getElementById('sc-story').textContent=sc.story;
+  document.getElementById('sc-q').textContent=sc.q;
+  document.getElementById('sc-fb').style.display='none';
+  document.getElementById('sc-analysis-wrap').style.display='none';
+  document.getElementById('sc-analysis').value='';
+  document.getElementById('btn-sc-next').disabled=true;
+  setProgress(30+(sci/SCEN.length)*16,'Faza 3 – Scenariji s analizom');
+
+  let cc=document.getElementById('sc-choices');
+  cc.innerHTML='';
+  let grid=document.createElement('div');
+  grid.className='choice-grid';
+  let lbls=['A','B','C','D'];
+  sc.choices.forEach((c,i)=>{
+    let div=document.createElement('div');
+    div.className='choice';
+    div.innerHTML='<div class="choice-lbl">'+lbls[i]+') '+c.t+'</div><div class="choice-desc">'+c.d+'</div>';
+    div.onclick=()=>answerSc(i);
+    grid.appendChild(div);
+  });
+  cc.appendChild(grid);
+  updateScStats();
+}
+
+function answerSc(i){
+  let sc=SCEN[sci];
+  document.querySelectorAll('.choice').forEach(c=>c.onclick=null);
+  let cards=document.querySelectorAll('.choice');
+  let ok=sc.choices[i].ok;
+  if(ok){cards[i].classList.add('correct');scCorrect++;scPts+=15;totalPts+=15;}
+  else{cards[i].classList.add('wrong');sc.choices.forEach((c,j)=>{if(c.ok)cards[j].classList.add('correct');});}
+  document.getElementById('sc-fb').innerHTML='<div class="fb '+(ok?'fb-ok':'fb-no')+'">'+sc.tip+'</div>';
+  document.getElementById('sc-fb').style.display='block';
+  document.getElementById('sc-analysis-wrap').style.display='block';
+  updateScStats();
+}
+
+function checkAnalysisLen(){
+  let v=document.getElementById('sc-analysis').value;
+  let cc=document.getElementById('sc-analysis-char');
+  cc.textContent='Minimum 50 znakova. Upisano: '+v.length;
+  cc.className='char-count '+(v.length>=50?'char-ok':'char-warn');
+  document.getElementById('btn-sc-next').disabled=v.length<50;
+}
+
+function nextScenario(){
+  let an=document.getElementById('sc-analysis').value.trim();
+  if(an.length<50){alert('Analiza je prekratka! Napiši barem 50 znakova.');return;}
+  scAnalyses.push({title:SCEN[sci].title,analysis:an});
+  sci++;
+  if(sci>=SCEN.length){startPhase4();return;}
+  renderSc();
+}
+
+function updateScStats(){
+  document.getElementById('sc-ok').textContent=scCorrect;
+  document.getElementById('sc-pts').textContent=scPts;
+  document.getElementById('sc-total').textContent=totalPts;
+  document.getElementById('sc-time').textContent=tmStr();
+}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 4 – NARUDŽBENICA
+═══════════════════════════════════════════════════ */
+function startPhase4(){
+  setPips(4);
+  document.getElementById('top-phase-lbl').textContent='Faza 4 – Narudžbenica';
+  setProgress(46,'Faza 4 – Narudžbenica');
+  let today=new Date();
+  document.getElementById('narudz-year').textContent=today.getFullYear();
+  document.getElementById('nf-datum').value=today.toISOString().split('T')[0];
+  document.getElementById('narudz-datum-prikaz').textContent=today.toLocaleDateString('hr-HR');
+  buildNarudzRows();
+  show('s-narudz');
+}
+
+function buildNarudzRows(){
+  let tbody=document.getElementById('narudz-rows');
+  tbody.innerHTML='';
+  for(let i=1;i<=3;i++){
+    let tr=document.createElement('tr');
+    tr.innerHTML=`<td style="padding:6px 10px;font-weight:600;color:#64748b">${i}.</td>
+      <td><input type="text" id="nr-naziv-${i}" placeholder="Naziv artikla..." oninput="calcNarudz()"></td>
+      <td><input type="text" id="nr-jm-${i}" placeholder="npr. kg, kom, l" style="width:70px" oninput="calcNarudz()"></td>
+      <td><input type="number" id="nr-kol-${i}" placeholder="0" min="0" oninput="calcNarudz()" style="width:80px"></td>
+      <td><input type="number" id="nr-cij-${i}" placeholder="0.00" min="0" step="0.01" oninput="calcNarudz()" style="width:90px"></td>
+      <td style="padding:6px 10px;font-weight:600" id="nr-uk-${i}">0,00 €</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function calcNarudz(){
+  let sub=0;
+  for(let i=1;i<=3;i++){
+    let k=parseFloat(document.getElementById('nr-kol-'+i).value)||0;
+    let c=parseFloat(document.getElementById('nr-cij-'+i).value)||0;
+    let uk=k*c;
+    document.getElementById('nr-uk-'+i).textContent=uk.toLocaleString('hr-HR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+    sub+=uk;
+  }
+  let pdv=sub*0.25;
+  document.getElementById('narudz-subtotal').textContent=eur(sub);
+  document.getElementById('narudz-pdv').textContent=eur(pdv);
+  document.getElementById('narudz-total').textContent=eur(sub+pdv);
+}
+
+function validateNarudz(){
+  let errors=[];
+  let required=[
+    ['nf-naru-naziv','Naziv tvrtke naručitelja'],
+    ['nf-naru-oib','OIB naručitelja'],
+    ['nf-naru-adresa','Adresa naručitelja'],
+    ['nf-naru-kontakt','Kontakt osoba'],
+    ['nf-dob-naziv','Naziv tvrtke dobavljača'],
+    ['nf-dob-oib','OIB dobavljača'],
+    ['nf-datum','Datum narudžbe'],
+    ['nf-rok','Rok isporuke'],
+    ['nf-napomena','Napomena'],
+    ['nf-potpis','Odobreno od'],
+    ['nf-funkcija','Funkcija'],
+  ];
+  required.forEach(([id,lbl])=>{let v=document.getElementById(id).value.trim();if(!v)errors.push(lbl);});
+  for(let i=1;i<=3;i++){
+    if(!document.getElementById('nr-naziv-'+i).value.trim())errors.push('Naziv artikla '+i);
+    if(!document.getElementById('nr-kol-'+i).value)errors.push('Količina artikla '+i);
+    if(!document.getElementById('nr-cij-'+i).value)errors.push('Cijena artikla '+i);
+  }
+  let vb=document.getElementById('narudz-validation');
+  if(errors.length>0){
+    vb.innerHTML='<div class="fb fb-no">❌ <strong>Nedostaju podaci:</strong> '+errors.join(', ')+'</div>';
+    return;
+  }
+  // save data
+  narudzData={
+    naruNaziv:document.getElementById('nf-naru-naziv').value,
+    naruOib:document.getElementById('nf-naru-oib').value,
+    naruAdresa:document.getElementById('nf-naru-adresa').value,
+    naruKontakt:document.getElementById('nf-naru-kontakt').value,
+    dobNaziv:document.getElementById('nf-dob-naziv').value,
+    dobOib:document.getElementById('nf-dob-oib').value,
+    datum:document.getElementById('nf-datum').value,
+    rok:document.getElementById('nf-rok').value,
+    napomena:document.getElementById('nf-napomena').value,
+    potpis:document.getElementById('nf-potpis').value,
+    funkcija:document.getElementById('nf-funkcija').value,
+    artikli:[],
+    subtotal:document.getElementById('narudz-subtotal').textContent,
+    total:document.getElementById('narudz-total').textContent,
+  };
+  for(let i=1;i<=3;i++){
+    narudzData.artikli.push({
+      naziv:document.getElementById('nr-naziv-'+i).value,
+      jm:document.getElementById('nr-jm-'+i).value,
+      kol:document.getElementById('nr-kol-'+i).value,
+      cij:document.getElementById('nr-cij-'+i).value,
+      uk:document.getElementById('nr-uk-'+i).textContent
+    });
+  }
+  narudzPts=20;totalPts+=20;
+  vb.innerHTML='<div class="fb fb-ok">✅ Narudžbenica je ispravno popunjena! Nastavljamo na simulaciju.</div>';
+  document.querySelector('#s-narudz .btn-green').disabled=true;
+  setTimeout(startPhase5,1800);
+}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 5 – SIM
+═══════════════════════════════════════════════════ */
+function startPhase5(){
+  simQ=1;simBudget=6500;simStock=200;simRep=100;simProfit=0;simPts=0;simSel=null;simLog=[];
+  setPips(5);
+  document.getElementById('top-phase-lbl').textContent='Faza 5 – Simulacija';
+  setProgress(62,'Faza 5 – Simulacija nabave');
+  show('s-sim');
+  simStartQ();
+}
+
+function simStartQ(){
+  simSel=null;
+  document.getElementById('sim-q-lbl').textContent='Kvartal '+simQ+' od 4 – "ZalihaPlus d.o.o."';
+  let ev=SIM_EVS[Math.floor(Math.random()*SIM_EVS.length)];
+  simEv=ev.mod||{};
+  document.getElementById('sim-ev-box').textContent=ev.txt;
+  simDem=Math.round((180+Math.random()*160)*(simEv.dm||1));
+  simUpdateStats();
+  simStepShow('sup');
+  document.getElementById('sim-dem').textContent=simDem;
+  document.getElementById('sim-need').textContent=Math.max(0,simDem-simStock);
+
+  let grid=document.getElementById('sim-sup-grid');
+  grid.innerHTML='';
+  SIM_SUPS.forEach(s=>{
+    let blk=simEv.blk===s.id;
+    let ep=s.price*(simEv.pm||1);
+    if(simEv.ds===s.id)ep*=(1-(simEv.d||0));
+    let qOk=s.quality>=(simEv.mq||0);
+    let qb=s.quality>=0.95?'b-green':s.quality>=0.88?'b-amber':'b-red';
+    let rb=s.rel>=0.90?'b-green':s.rel>=0.80?'b-amber':'b-red';
+    let d=document.createElement('div');
+    d.className='sup-card'+(blk?' ':' ');
+    d.id='ss-'+s.id;
+    d.style.opacity=blk?'0.4':'1';
+    d.style.cursor=blk?'not-allowed':'pointer';
+    d.innerHTML=`<div style="font-weight:700;font-size:14px;margin-bottom:6px">${s.icon} ${s.name} ${blk?'<span class="badge b-red">Nedostupan</span>':''} ${!qOk&&simEv.mq?'<span class="badge b-red">Niska kvaliteta!</span>':''}</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:8px">${s.desc}</div>
+      <div class="sup-row"><span>Cijena/jed.</span><span><strong>${eur(ep)}</strong>${simEv.ds===s.id?' <span class="badge b-green">-'+(simEv.d*100)+'%</span>':''}</span></div>
+      <div class="sup-row"><span>Isporuka</span><span>${s.days} dana</span></div>
+      <div class="sup-row"><span>Kvaliteta</span><span><span class="badge ${qb}">${(s.quality*100).toFixed(0)}%</span></span></div>
+      <div class="sup-row"><span>Pouzdanost</span><span><span class="badge ${rb}">${(s.rel*100).toFixed(0)}%</span></span></div>`;
+    if(!blk)d.onclick=()=>simSelSup(s.id);
+    grid.appendChild(d);
+  });
+  document.getElementById('btn-sim-qty').disabled=true;
+}
+
+function simSelSup(id){
+  simSel=id;
+  document.querySelectorAll('.sup-card').forEach(c=>c.classList.remove('chosen'));
+  document.getElementById('ss-'+id).classList.add('chosen');
+  document.getElementById('btn-sim-qty').disabled=false;
+}
+
+function simGoQty(){
+  if(!simSel)return;
+  let s=SIM_SUPS.find(x=>x.id===simSel);
+  let ep=s.price*(simEv.pm||1);
+  if(simEv.ds===s.id)ep*=(1-(simEv.d||0));
+  document.getElementById('sim-sup-info-box').innerHTML=`${s.icon} <strong>${s.name}</strong> | ${eur(ep)}/jed. | Isporuka: ${s.days} dana | Min: ${s.min} jed.`;
+  let inp=document.getElementById('sim-qty-r');
+  inp.min=s.min;inp.max=Math.min(600,Math.floor(simBudget/ep));
+  inp.value=Math.max(s.min,Math.max(0,simDem-simStock));
+  simUpdateQty();
+  simStepShow('qty');
+}
+
+function simUpdateQty(){
+  let qty=parseInt(document.getElementById('sim-qty-r').value);
+  let s=SIM_SUPS.find(x=>x.id===simSel);
+  let ep=s.price*(simEv.pm||1);
+  if(simEv.ds===s.id)ep*=(1-(simEv.d||0));
+  let cost=qty*ep,proj=simStock+qty,sur=Math.max(0,proj-simDem),shr=Math.max(0,simDem-proj),sc=sur*0.30;
+  document.getElementById('sim-qty-val').textContent=qty+' jed.';
+  document.getElementById('sim-qty-prev').innerHTML=`💰 Trošak: <strong>${eur(cost)}</strong> | 📦 Projektirano: <strong>${proj} jed.</strong> | 🏠 Skladište: <strong>${eur(sc)}</strong>`;
+  let w='';
+  if(cost>simBudget)w='⚠️ Nedovoljno sredstava!';
+  else if(proj<simDem)w='⚠️ Nedovoljne zalihe!';
+  else if(sur>200)w='ℹ️ Prekomjerne zalihe.';
+  document.getElementById('sim-qty-warn').textContent=w;
+}
+
+function simConfirm(){
+  let qty=parseInt(document.getElementById('sim-qty-r').value);
+  let s=SIM_SUPS.find(x=>x.id===simSel);
+  let ep=s.price*(simEv.pm||1);
+  if(simEv.ds===s.id)ep*=(1-(simEv.d||0));
+  let cost=qty*ep;
+  if(cost>simBudget){alert('Nedovoljno sredstava!');return;}
+  let actual=qty,delivered=true;
+  if(Math.random()>s.rel){actual=Math.round(qty*0.5);delivered=false;}
+  simBudget-=cost;
+  simStock+=actual;
+  let sur=Math.max(0,simStock-simDem),shr=Math.max(0,simDem-simStock);
+  let sc=sur*0.30,pen=shr*2.50,rev=Math.min(simStock,simDem)*12;
+  simBudget-=sc+pen;simBudget+=rev;simProfit+=rev-cost-sc-pen;
+  simStock=Math.max(0,simStock-simDem);
+  let qp=Math.max(0,100-shr-Math.round(sc)+(sur<50?15:0));
+  if(!delivered)qp=Math.max(0,qp-25);
+  simPts+=qp;totalPts+=qp;
+  if(shr>0)simRep=Math.max(0,simRep-Math.ceil(shr/10));
+  else simRep=Math.min(100,simRep+3);
+  simLog.push(`K${simQ}: ${s.name}, ${qty} jed., ${eur(cost)} | Isp: ${actual} | Manjak: ${shr} | Višak: ${sur} | Bodovi: +${qp}`);
+
+  let html=`<div class="stats" style="margin-bottom:1rem">
+    <div class="stat"><div class="stat-l">Naručeno</div><div class="stat-v">${qty}</div></div>
+    <div class="stat"><div class="stat-v" style="color:${delivered?'var(--green)':'var(--red)'}">${actual}</div><div class="stat-l">Isporučeno</div></div>
+    <div class="stat"><div class="stat-l">Prihod</div><div class="stat-v">${eur(rev)}</div></div>
+    <div class="stat"><div class="stat-l">Bodovi</div><div class="stat-v">+${qp}</div></div>
+  </div>
+  ${shr>0?`<div class="fb fb-no">⚠️ Manjak: ${shr} jed. — Kazna: ${eur(pen)} | Reputacija pala!</div>`:''}
+  ${sur>0?`<div class="fb fb-info">📦 Višak: ${sur} jed. — Trošak skladišta: ${eur(sc)}</div>`:''}
+  ${!delivered?`<div class="fb fb-no">🚨 Dobavljač isporučio samo 50%! Pouzdanost je ključna.</div>`:''}
+  ${shr===0&&delivered?`<div class="fb fb-ok">✅ Sve zalihe podmirene bez manjka!</div>`:''}`;
+
+  document.getElementById('sim-res-details').innerHTML=html;
+  document.getElementById('btn-sim-next').textContent=simQ>=4?'Završi simulaciju →':'Sljedeći kvartal →';
+  simUpdateStats();simStepShow('res');
+}
+
+function simNext(){
+  if(simQ>=4){startPhase6();return;}
+  simQ++;
+  setProgress(62+(simQ-1)/4*14,'Faza 5 – Simulacija nabave');
+  simStepShow('none');simStartQ();
+}
+
+function simUpdateStats(){
+  document.getElementById('sim-budget').textContent=eur(simBudget);
+  document.getElementById('sim-stock').textContent=simStock+' jed.';
+  document.getElementById('sim-rep').textContent=simRep;
+  document.getElementById('sim-profit').textContent=eur(simProfit);
+}
+
+function simStepShow(s){
+  ['sup','qty','res'].forEach(x=>document.getElementById('sim-'+x+'-step').style.display=s===x?'block':'none');
+}
+
+/* ═══════════════════════════════════════════════════
+   PHASE 6 – ESSAY
+═══════════════════════════════════════════════════ */
+function startPhase6(){
+  setPips(6);
+  document.getElementById('top-phase-lbl').textContent='Faza 6 – Esej';
+  setProgress(78,'Faza 6 – Zaključni esej');
+  show('s-esej');
+}
+
+function checkEsej(){
+  let v=document.getElementById('esej-text').value;
+  esejText=v;
+  let words=wc(v);
+  let wcel=document.getElementById('esej-wc');
+  wcel.textContent=words+' / 80 riječi';
+  wcel.className='word-count '+(words>=80?'wc-ok':'wc-low');
+  document.getElementById('esej-chars').textContent='Upisano znakova: '+v.length;
+  document.getElementById('btn-finish').disabled=words<80;
+  document.getElementById('esej-warn').textContent=words<80?'Napiši još '+(80-words)+' riječ(i) da završiš igru.':'';
+}
+
+function finishGame(){
+  let words=wc(document.getElementById('esej-text').value);
+  if(words<80){alert('Esej mora imati minimalno 80 riječi!');return;}
+  esejPts=words>=120?25:words>=100?20:15;
+  totalPts+=esejPts;
+  clearInterval(timerInt);
+  setProgress(100,'Završeno!');
+  showEnd();
+}
+
+/* ═══════════════════════════════════════════════════
+   END
+═══════════════════════════════════════════════════ */
+function showEnd(){
+  let max=DEFS.length*10+QUIZ.length*15+SCEN.length*15+20+400+25;
+  let pct=Math.round((totalPts/max)*100);
+  let grade=pct>=90?'5':pct>=75?'4':pct>=60?'3':pct>=50?'2':'1';
+  let icon=pct>=90?'🏆':pct>=75?'🥈':pct>=60?'🥉':'📚';
+  let title=pct>=90?'Izvrsno! Pravi stručnjak za nabavu!':pct>=75?'Vrlo dobro! Solidno znanje.':pct>=60?'Dobro – ima mjesta za napredak.':'Nastavi učiti – ne odustaj!';
+  let msg='Završio/la si sve 6 faza igre. Ukupno '+totalPts+' bodova od max '+max+' ('+pct+'%).';
+
+  document.getElementById('end-icon').textContent=icon;
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-msg').textContent=msg;
+  document.getElementById('end-total').textContent=totalPts+' bod.';
+  document.getElementById('end-p12').textContent=(defPts+qPts)+' bod.';
+  document.getElementById('end-p34').textContent=(scPts+narudzPts)+' bod.';
+  document.getElementById('end-p56').textContent=(simPts+esejPts)+' bod.';
+  document.getElementById('er-name').textContent=sName;
+  document.getElementById('er-class').textContent=sClass;
+  document.getElementById('er-p1').textContent=DEFS.length+'/'+DEFS.length+' definicija ('+defPts+' bod.)';
+  document.getElementById('er-p2').textContent=qCorrect+'/'+QUIZ.length+' točnih ('+qPts+' bod.)';
+  document.getElementById('er-p3').textContent=scCorrect+'/'+SCEN.length+' točnih odluka ('+scPts+' bod.)';
+  document.getElementById('er-p4').textContent='Narudžbenica popunjena ('+narudzPts+' bod.)';
+  document.getElementById('er-p5').textContent=simQ+' kvartala ('+simPts+' bod.)';
+  document.getElementById('er-p6').textContent=wc(esejText)+' riječi ('+esejPts+' bod.)';
+  document.getElementById('er-time').textContent=elapsed()+' min';
+  let gEl=document.getElementById('er-grade');
+  gEl.textContent=grade;
+  gEl.style.color=pct>=75?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
+  setPips(7);
+  show('s-end');
+}
+
+/* ═══════════════════════════════════════════════════
+   PDF GENERATION
+═══════════════════════════════════════════════════ */
+function genPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,M=15;
+  let y=0;
+
+  function addPage(){doc.addPage();y=15;}
+  function checkY(need){if(y+need>H-20)addPage();}
+
+  // ---- PAGE 1: HEADER + OVERVIEW ----
+  doc.setFillColor(29,78,216);doc.rect(0,0,W,40,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');doc.setFontSize(18);
+  doc.text('POTVRDA O ZAVRŠETKU OBRAZOVNE IGRE',W/2,15,{align:'center'});
+  doc.setFontSize(12);doc.setFont('helvetica','normal');
+  doc.text('Nabava zaliha sirovina i materijala | Ekonomski smjer | Srednja škola',W/2,24,{align:'center'});
+  doc.setFontSize(10);
+  doc.text('Sve 6 faza završene uz pisane zadatke | PDF generiran: '+new Date().toLocaleString('hr-HR'),W/2,33,{align:'center'});
+
+  y=48;
+  // student info
+  doc.setFillColor(239,246,255);doc.roundedRect(M,y,W-2*M,30,3,3,'F');
+  doc.setDrawColor(191,219,254);doc.roundedRect(M,y,W-2*M,30,3,3,'S');
+  doc.setTextColor(30,58,138);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('Ucenik/ca: '+sName,M+5,y+9);
+  doc.text('Razred: '+sClass,M+5,y+17);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(71,85,105);
+  doc.text('Skola: '+sSchool,M+5,y+25);
+  doc.text('Datum: '+new Date().toLocaleDateString('hr-HR')+' | Utrošeno: '+elapsed()+' min',W-M-5,y+25,{align:'right'});
+
+  y+=38;
+  // results overview
+  doc.setTextColor(30,41,59);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('PREGLED REZULTATA',M,y);y+=6;
+  doc.setDrawColor(226,232,240);doc.setLineWidth(0.3);doc.line(M,y,W-M,y);y+=6;
+
+  let max=DEFS.length*10+QUIZ.length*15+SCEN.length*15+20+400+25;
+  let pct=Math.round((totalPts/max)*100);
+  let grade=pct>=90?'5 (Odlican)':pct>=75?'4 (Vrlo dobar)':pct>=60?'3 (Dobar)':pct>=50?'2 (Dovoljan)':'1 (Nedovoljan)';
+
+  let rows=[
+    ['Faza 1 - Definicije pojmova (8 pojmova)',DEFS.length+'/'+DEFS.length+' defin.',defPts+' bod.'],
+    ['Faza 2 - Kviz s obrazlozenjem (10 pitanja)',qCorrect+'/'+QUIZ.length+' tocnih',qPts+' bod.'],
+    ['Faza 3 - Scenariji s analizom (5 slucajeva)',scCorrect+'/'+SCEN.length+' tocnih',scPts+' bod.'],
+    ['Faza 4 - Narudžbenica (obrazac)','Popunjeno',narudzPts+' bod.'],
+    ['Faza 5 - Simulacija nabave (4 kvartala)',simQ+' kvartala',simPts+' bod.'],
+    ['Faza 6 - Zakljucni esej',wc(esejText)+' rijeci',esejPts+' bod.'],
+  ];
+  rows.forEach((r,i)=>{
+    if(i%2===0){doc.setFillColor(248,250,252);doc.rect(M,y-1,W-2*M,8,'F');}
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(30,41,59);
+    doc.text(r[0],M+2,y+5);
+    doc.text(r[1],135,y+5,{align:'center'});
+    doc.setFont('helvetica','bold');doc.text(r[2],W-M-2,y+5,{align:'right'});
+    y+=8;
+  });
+
+  y+=4;
+  doc.setFillColor(29,78,216);doc.roundedRect(M,y,W-2*M,20,3,3,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('UKUPNO: '+totalPts+' / '+max+' bodova ('+pct+'%)',W/2,y+8,{align:'center'});
+  doc.setFontSize(15);doc.text('Ocjena: '+grade,W/2,y+16,{align:'center'});
+
+  // ---- PAGE 2: DEFINITIONS ----
+  addPage();
+  doc.setFillColor(239,246,255);doc.rect(0,0,W,14,'F');
+  doc.setTextColor(29,78,216);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('FAZA 1 – DEFINICIJE POJMOVA',W/2,10,{align:'center'});
+  y=22;
+
+  defAnswers.forEach((d,i)=>{
+    checkY(28);
+    doc.setFillColor(248,250,252);doc.roundedRect(M,y,W-2*M,6,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(29,78,216);
+    doc.text((i+1)+'. '+d.term,M+3,y+4);
+    y+=8;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+    let lines=doc.splitTextToSize('Odgovor: '+d.answer,W-2*M-6);
+    lines.forEach(l=>{checkY(6);doc.text(l,M+3,y);y+=5;});
+    doc.setTextColor(71,85,105);doc.setFontSize(8);
+    let ml=doc.splitTextToSize('Model: '+d.model,W-2*M-6);
+    ml.forEach(l=>{checkY(5);doc.text(l,M+3,y);y+=4.5;});
+    y+=4;
+  });
+
+  // ---- PAGE 3: SCENARIOS ----
+  addPage();
+  doc.setFillColor(255,251,235);doc.rect(0,0,W,14,'F');
+  doc.setTextColor(180,83,9);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('FAZA 3 – ANALIZE SCENARIJA',W/2,10,{align:'center'});
+  y=22;
+  scAnalyses.forEach((a,i)=>{
+    checkY(20);
+    doc.setFillColor(255,251,235);doc.roundedRect(M,y,W-2*M,6,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(180,83,9);
+    doc.text((i+1)+'. '+a.title,M+3,y+4);y+=8;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+    let lines=doc.splitTextToSize(a.analysis,W-2*M-6);
+    lines.forEach(l=>{checkY(5);doc.text(l,M+3,y);y+=5;});
+    y+=5;
+  });
+
+  // ---- PAGE 4: NARUDZBENICA ----
+  addPage();
+  doc.setFillColor(236,253,245);doc.rect(0,0,W,14,'F');
+  doc.setTextColor(4,120,87);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('FAZA 4 – NARUDŽBENICA',W/2,10,{align:'center'});
+  y=20;
+
+  if(narudzData.naruNaziv){
+    // header
+    doc.setFillColor(51,65,85);doc.roundedRect(M,y,W-2*M,12,3,3,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text('NARUDŽBENICA – '+narudzData.naruNaziv,M+4,y+5);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    doc.text('Datum: '+narudzData.datum,W-M-4,y+5,{align:'right'});
+    doc.text('Rok isporuke: '+narudzData.rok,W-M-4,y+10,{align:'right'});
+    y+=15;
+
+    doc.setTextColor(30,41,59);doc.setFont('helvetica','bold');doc.setFontSize(10);
+    doc.text('NARUCITELJ',M,y+5);doc.text('DOBAVLJAC',W/2+5,y+5);y+=8;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    doc.text('Naziv: '+narudzData.naruNaziv,M,y);doc.text('Naziv: '+narudzData.dobNaziv,W/2+5,y);y+=5;
+    doc.text('OIB: '+narudzData.naruOib,M,y);doc.text('OIB: '+narudzData.dobOib,W/2+5,y);y+=5;
+    doc.text('Adresa: '+narudzData.naruAdresa,M,y);y+=5;
+    doc.text('Kontakt: '+narudzData.naruKontakt,M,y);y+=8;
+
+    // table
+    doc.setFillColor(248,250,252);doc.rect(M,y,W-2*M,7,'F');
+    doc.setDrawColor(226,232,240);doc.rect(M,y,W-2*M,7,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(100,116,139);
+    let cols=[M+2,M+50,M+95,M+115,M+135,M+158];
+    ['#','NAZIV ARTIKLA','JED. MJERA','KOLICINA','CIJENA/JED.','UKUPNO'].forEach((h,i)=>{doc.text(h,cols[i],y+5);});
+    y+=7;
+    narudzData.artikli.forEach((a,i)=>{
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+      if(i%2===0){doc.setFillColor(250,250,250);doc.rect(M,y,W-2*M,7,'F');}
+      doc.text(String(i+1),cols[0],y+5);
+      doc.text(a.naziv.substring(0,22),cols[1],y+5);
+      doc.text(a.jm,cols[2],y+5);
+      doc.text(String(a.kol),cols[3],y+5);
+      doc.text(a.cij+' €',cols[4],y+5);
+      doc.setFont('helvetica','bold');doc.text(a.uk,cols[5],y+5);
+      y+=7;
+    });
+    doc.setFillColor(241,245,249);doc.rect(M,y,W-2*M,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(30,41,59);
+    doc.text('UKUPNO S PDV-om (25%):',cols[3],y+4);
+    doc.setFontSize(11);doc.text(narudzData.total,cols[5],y+4);
+    y+=10;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    doc.text('Napomena: '+narudzData.napomena,M,y);y+=6;
+    doc.text('Odobrio/la: '+narudzData.potpis+' ('+narudzData.funkcija+')',M,y);y+=10;
+    doc.setFont('helvetica','bold');doc.setFontSize(9);
+    doc.text('Potpis: _______________________',M,y);
+    doc.text('Zig: _______________________',W/2,y);
+  }
+
+  // ---- PAGE 5: ESSAY + SIM ----
+  addPage();
+  doc.setFillColor(245,243,255);doc.rect(0,0,W,14,'F');
+  doc.setTextColor(109,40,217);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('FAZA 6 – ZAKLJUCNI ESEJ',W/2,10,{align:'center'});
+  y=22;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+  let eLines=doc.splitTextToSize(esejText,W-2*M);
+  eLines.forEach(l=>{checkY(5);doc.text(l,M,y);y+=5;});
+  y+=6;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(71,85,105);
+  doc.text('Broj rijeci: '+wc(esejText),M,y);y+=10;
+
+  // sim log
+  checkY(20);
+  doc.setTextColor(4,120,87);doc.setFont('helvetica','bold');doc.setFontSize(12);
+  doc.text('FAZA 5 – DNEVNIK SIMULACIJE',M,y);y+=6;
+  doc.setDrawColor(226,232,240);doc.line(M,y,W-M,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+  simLog.forEach((l,i)=>{
+    checkY(6);
+    if(i%2===0){doc.setFillColor(248,250,252);doc.rect(M,y-1,W-2*M,6,'F');}
+    doc.text(l,M+2,y+3);y+=6;
+  });
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(71,85,105);
+  y+=4;
+  doc.text('Završni profit simulacije: '+eur(simProfit)+' | Reputacija: '+simRep+'/100',M,y);
+
+  // ---- LAST PAGE: SIGNATURE ----
+  addPage();
+  doc.setFillColor(248,250,252);doc.rect(0,0,W,H,'F');
+  doc.setFillColor(29,78,216);doc.roundedRect(M,H/2-40,W-2*M,80,5,5,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.text('POTVRDA O USPJEŠNOM ZAVRŠETKU',W/2,H/2-20,{align:'center'});
+  doc.setFontSize(13);
+  doc.text(sName+' | Razred: '+sClass,W/2,H/2-8,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(11);
+  doc.text('Ukupno bodova: '+totalPts+' | Ocjena: '+grade,W/2,H/2+2,{align:'center'});
+  doc.text('Utrošeno: '+elapsed()+' min | Datum: '+new Date().toLocaleDateString('hr-HR'),W/2,H/2+11,{align:'center'});
+  doc.setFontSize(10);doc.text('Sve 6 faza završene, uključujući pisane zadatke i narudžbenicu.',W/2,H/2+23,{align:'center'});
+  doc.setTextColor(30,41,59);doc.setFontSize(10);
+  doc.text('Potpis nastavnika/ice: _____________________________',M,H/2+45);
+  doc.text('Datum provjere: _____________________________',W-M-5,H/2+45,{align:'right'});
+  doc.text('Škola: '+sSchool,W/2,H/2+56,{align:'center'});
+
+  // footer on all pages
+  let total_pages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=total_pages;p++){
+    doc.setPage(p);
+    doc.setFillColor(248,250,252);doc.rect(0,H-10,W,10,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
+    doc.text('Nabava zaliha sirovina – obrazovna igra | '+sName+' | '+new Date().toLocaleDateString('hr-HR'),W/2,H-4,{align:'center'});
+    doc.text('Stranica '+p+' od '+total_pages,W-M,H-4,{align:'right'});
+  }
+
+  // iOS Safari fix: doc.save() doesn't work reliably on iOS
+  // Instead, open as blob URL in new tab where user can use share sheet to save
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isIOS || isSafari) {
+    var pdfBlob = doc.output('blob');
+    var blobURL = URL.createObjectURL(pdfBlob);
+    // Show instructions modal for iOS users
+    var modal = document.getElementById('ios-pdf-modal');
+    var link = document.getElementById('ios-pdf-link');
+    link.href = blobURL;
+    link.download = 'potvrda_nabava_'+sName.replace(/\s+/g,'_')+'_'+sClass+'.pdf';
+    modal.style.display = 'flex';
+  } else {
+    doc.save('potvrda_nabava_'+sName.replace(/\s+/g,'_')+'_'+sClass+'.pdf');
+  }
+}
+</script>
+</body>
+</html>
